@@ -14,6 +14,7 @@ from imgui.integrations.glfw import GlfwRenderer
 width_window = 800
 height_window = 600
 
+
 click_col = -1
 click_row= -1
 def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy):
@@ -54,10 +55,8 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
                 thicknes = 5
                 size = 2
             draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
-
 def show_2d_tensor(tensor):
     tensorHeight,tensorWidth = tensor.shape
-
     X=((torch.reshape(tensor, (1,tensorHeight*tensorWidth))).squeeze(0)).reshape(tensorHeight*tensorWidth,1)
     tens2 = torch.zeros([tensorHeight*tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
     X2=torch.cat((X,tens2),1)
@@ -77,9 +76,9 @@ def show_2d_tensor(tensor):
     uniform float uSizeData;
     uniform float uLocx;
     uniform float uLocy;
-    
+
     out vec2 TexCoord;
-    out float Isdata;
+
     void main()
     {
         TexCoord = aTexCoord;
@@ -87,48 +86,33 @@ def show_2d_tensor(tensor):
             gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);
             gl_PointSize = uSizeData;
             TexCoord = vec2(uLocx,uLocy);
-            Isdata = 1.0;
 
         }
         else{
             gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
             gl_PointSize = uSize;
-            Isdata = 0.0;
         }
     }
     """
-
     # Fragment shader source code
     FRAGMENT_SHADER = """
     #version 330 core
 
     out vec4 FragColor;
-
+    
     in vec2 TexCoord;
-    in float Isdata;
 
     uniform sampler2D ourTexture;
 
     void main()
     {
-        if (Isdata == 1.0){
-            if (texture(ourTexture, TexCoord).g >= 1.0){
-                FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-            }
-            else{
-                FragColor = vec4(texture(ourTexture, TexCoord).g, texture(ourTexture, TexCoord).g, texture(ourTexture, TexCoord).g, 1.0f);
-            }
-        }
-        else{
-            if (texture(ourTexture, TexCoord).g>=1.0)
-                FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-            else
-                FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        }
+
+        if (texture(ourTexture, TexCoord).g==1.0)
+            FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
+        else
+            FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
     }
     """
-
-
     # example : 
     # vertices = np.array([
     #         #positions                     // texture coords
@@ -138,7 +122,6 @@ def show_2d_tensor(tensor):
     #         -0.5, -0.33, 0.0,      0.25,0.66,     #1.0, 
     #         0.0, -0.33, 0.0,      0.50,0.66,     #0.0, 
     #         0.5, -0.33, 0.0,      0.75,0.66,     #1.0, 
-    
     # ], dtype=np.float32)
 
     vertices = np.zeros((tensorHeight*tensorWidth*5+5),dtype=np.float32)
@@ -156,6 +139,7 @@ def show_2d_tensor(tensor):
     vertices[index+2] = -1.0
     vertices[index+3] = -1+(0+1)/(tensorWidth+1)
     vertices[index+4] = -1+(0+1)/(tensorHeight+1)
+
     # Callback function for window resize
     def framebuffer_size_callback(window, width, height):
         global width_window
@@ -165,22 +149,17 @@ def show_2d_tensor(tensor):
         height_window = height
         glUniform1f(uniform_location_size_data, width_window/8.5)
 
-
     imgui.create_context()
 
     # Initialize GLFW
     if not glfw.init():
         raise Exception("GLFW initialization failed")
 
-    # glfw.window_hint(glfw.DOUBLEBUFFER, glfw.TRUE)
-
     # Create a GLFW window
     window = glfw.create_window(width_window, height_window, "OpenGL Window", None, None)
     if not window:
         glfw.terminate()
         raise Exception("GLFW window creation failed")
-
-
 
     # Make the window's context current
     glfw.make_context_current(window)
@@ -209,14 +188,11 @@ def show_2d_tensor(tensor):
     glDeleteShader(vertex_shader)
     glDeleteShader(fragment_shader)
 
-
-    # find uniform locations
+    # uniform location for size of vertecies
     uniform_location_size = glGetUniformLocation(shader_program, "uSize")
     uniform_location_size_data = glGetUniformLocation(shader_program, "uSizeData")
     uniform_location_locx = glGetUniformLocation(shader_program, "uLocx")
     uniform_location_locy = glGetUniformLocation(shader_program, "uLocy")
-
-
 
     #!!! most importat section to start cuda and openGL interop
     vao = glGenVertexArrays(1)
@@ -241,7 +217,6 @@ def show_2d_tensor(tensor):
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
-
     ### !!! Register texture to cuda can access to it
     err, cuda_image = cu.cudaGraphicsGLRegisterImage(
         color,
@@ -255,12 +230,12 @@ def show_2d_tensor(tensor):
     glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
     glEnable(GL_PROGRAM_POINT_SIZE)
     lastTime = time.time()
+    lastTime2 = time.time()
     frameNumber = 0
 
 
-    ## maximize at start
+    # maximize at start
     # glfw.maximize_window(window)
-
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glEnableVertexAttribArray(0)
@@ -280,22 +255,27 @@ def show_2d_tensor(tensor):
         glUniform1f(uniform_location_size, 1.0)
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
-
     # Render loop
     while not glfw.window_should_close(window):
         glfw.poll_events()
         impl.process_inputs()
         imgui.new_frame()
         imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy)
+
         glClearColor(0.2, 0.3, 0.3, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
         currentTime = time.time()
         timeDiff = currentTime - lastTime
+        timeDiff2 = currentTime - lastTime2
         frameNumber += 1
         if timeDiff >= 1.0 / 10.0:
             glfw.set_window_title(window, "FPS: "+str(int((1.0 / timeDiff) * frameNumber)))
             frameNumber = 0
             lastTime = currentTime
+        ## I want to show that it works dynamicly with tensor
+        # if timeDiff2 >= 0.5:
+        #     tensor = ~tensor
+        #     lastTime2 = currentTime
         X=((torch.reshape(tensor, (1,tensorHeight*tensorWidth))).squeeze(0)).reshape(tensorHeight*tensorWidth,1)
         tens2 = torch.zeros([tensorHeight*tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
         X2=torch.cat((X,tens2),1)
@@ -319,14 +299,13 @@ def show_2d_tensor(tensor):
         (err,) = cu.cudaGraphicsUnmapResources(1, cuda_image, cu.cudaStreamLegacy)
 
         glBindVertexArray(vao)
-        if click_row != -1 and click_col != -1: 
+        if click_row != -1 and click_col != -1:
             glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
-        else: 
+        else:
             glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth)
 
         imgui.render()
         impl.render(imgui.get_draw_data())
-
         
         # Swap buffers and poll events
         glfw.swap_buffers(window)
@@ -339,12 +318,45 @@ def show_2d_tensor(tensor):
 
 
 
-## example
-numpyArray = np.array([[0.1, 0.2, 0.3 ],
-                       [0.4, 0.5, 0.6],
-                       [0.7, 0.8, 0.9],
-                       [1.0, 0.9, 0.8],])
+## example 1
+numpyArray = np.array([[True, False, True ],
+                       [False, True, True],])
 tensor = torch.tensor(numpyArray,
-                      dtype=torch.float32,
+                      dtype=torch.bool,
                       device=torch.device('cuda:0'))
 show_2d_tensor(tensor)
+
+# rng= np.random.default_rng()
+# numpyArray= rng.integers(0,1,(10,10),endpoint= True).astype('bool')
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.bool,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+## example 2
+
+# rng= np.random.default_rng()
+# numpyArray= rng.integers(0,1,(20,10),endpoint= True).astype('bool')
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.bool,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+## example 3 
+
+# rng= np.random.default_rng()
+# numpyArray= rng.integers(0,1,(100,10),endpoint= True).astype('bool')
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.bool,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+
+## example 4
+
+# rng= np.random.default_rng()
+# numpyArray= rng.integers(0,1,(1000,100),endpoint= True).astype('bool')
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.bool,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
