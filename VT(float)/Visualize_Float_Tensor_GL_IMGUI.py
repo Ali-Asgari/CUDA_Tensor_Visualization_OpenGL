@@ -36,7 +36,6 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
                     else:
                         imgui.get_style().colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
                         imgui.get_style().colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-                        # imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
                     if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
                         click_col = j
                         click_row = i
