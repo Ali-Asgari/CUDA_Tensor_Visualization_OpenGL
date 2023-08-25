@@ -16,15 +16,18 @@ height_window = 600
 
 click_col = -1
 click_row= -1
-def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy):
+text_val = 0.0
+def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy):
     global click_col
     global click_row
+    global text_val
     circle_pos_x =1/8*width_window + (6/8)*width_window/(tensorWidth+1) * (click_col+1)
     circle_pos_y = height_window/(tensorHeight+1) * (tensorHeight-click_row)
     imgui.set_next_window_position(0, 0)
     imgui.set_next_window_size(width_window/8, height_window)
     window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
+    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
     style = imgui.get_style()
     style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
     style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
@@ -49,9 +52,9 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
     window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 0.01)
     flags = imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-    with imgui.begin("output",flags=flags):
-        draw_list = imgui.get_window_draw_list()
-        if click_row != -1 and click_col != -1:
+    if click_row != -1 and click_col != -1:
+        with imgui.begin("output",flags=flags):
+            draw_list = imgui.get_window_draw_list()
             thicknes = 5
             if tensorHeight*tensorWidth<=100:
                 size = 40
@@ -64,6 +67,18 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
                 thicknes = 5
                 size = 2
             draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
+    imgui.set_next_window_position(7*width_window/8, 2*height_window/3)
+    imgui.set_next_window_size(width_window/8, height_window)
+    window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
+    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
+    flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
+    if click_row != -1 and click_col != -1:
+        with imgui.begin("Change:",flags=flags):
+            imgui.text("New value:")
+            changed, text_val = imgui.input_float('', text_val)
+            if (imgui.button("Change",100,25)):
+                tensor[click_row][click_col]=text_val
+            
 
 def show_2d_tensor(tensor):
     tensorHeight,tensorWidth = tensor.shape
@@ -174,8 +189,6 @@ def show_2d_tensor(tensor):
         width_window = width
         height_window = height
         glUniform1f(uniform_location_size_data, width_window/8.5)
-        print(width_window)
-        # glUniform1f(uniform_location_size, width_window*height_window/(tensorHeight*tensorWidth*25))
 
 
     imgui.create_context()
@@ -290,6 +303,7 @@ def show_2d_tensor(tensor):
         glUniform1f(uniform_location_size, 5.0)
     else:
         glUniform1f(uniform_location_size, 1.0)
+    # glUniform1f(uniform_location_size, (6/8)*width_window*height_window/(tensorHeight*tensorWidth*1000))#,1.0)
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
 
@@ -299,7 +313,7 @@ def show_2d_tensor(tensor):
         glfw.poll_events()
         impl.process_inputs()
         imgui.new_frame()
-        imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy)
+        imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy)
         glClear(GL_COLOR_BUFFER_BIT)
         currentTime = time.time()
         timeDiff = currentTime - lastTime
@@ -362,7 +376,7 @@ def show_2d_tensor(tensor):
 # show_2d_tensor(tensor)
 
 
-numpyArray=np.random.uniform(-0.5,1.5,(1000,100))
+numpyArray=np.random.uniform(-0.5,1.5,(10,10))
 tensor = torch.tensor(numpyArray,
                       dtype=torch.float32,
                       device=torch.device('cuda:0'))
