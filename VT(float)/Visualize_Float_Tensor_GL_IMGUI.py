@@ -179,7 +179,7 @@ def show_2d_tensor(tensor):
     """
 
 
-    # example : 
+    ## example : 
     # vertices = np.array([
     #         #positions                     // texture coords
     #         -0.5,  0.33, 0.0,      0.25,0.33,     #0,0
@@ -190,7 +190,6 @@ def show_2d_tensor(tensor):
     #         0.5, -0.33, 0.0,      0.75,0.66,     #1.0, 
     
     # ], dtype=np.float32)
-
     vertices = np.zeros((tensorHeight*tensorWidth*5+5),dtype=np.float32)
     index=0
     for i in range(tensorWidth):
@@ -214,7 +213,6 @@ def show_2d_tensor(tensor):
         width_window = width
         height_window = height
         glUniform1f(uniform_location_size_data, width_window/8.5)
-
 
     imgui.create_context()
 
