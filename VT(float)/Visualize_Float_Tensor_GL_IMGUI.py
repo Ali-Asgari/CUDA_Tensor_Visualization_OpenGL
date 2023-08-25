@@ -11,7 +11,7 @@ import imgui
 from imgui.integrations.glfw import GlfwRenderer
 
 
-width_window = 800
+width_window = 950
 height_window = 600
 
 click_col = -1
@@ -25,17 +25,20 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
     imgui.set_next_window_size(width_window/8, height_window)
     window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
+    style = imgui.get_style()
+    style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+    style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     with imgui.begin("Vertecies:",flags=flags):
+            imgui.text("N:"+str(tensorWidth*tensorHeight))
             for i in range(tensorHeight):
                 for j in range(tensorWidth):
                     if i == click_row and j==click_col:
-                        imgui.get_style().colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                        imgui.get_style().colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                        
+                        style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
+                        style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
                     else:
-                        imgui.get_style().colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                        imgui.get_style().colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
+                        style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+                        style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
                     if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
                         click_col = j
                         click_row = i
@@ -171,6 +174,8 @@ def show_2d_tensor(tensor):
         width_window = width
         height_window = height
         glUniform1f(uniform_location_size_data, width_window/8.5)
+        print(width_window)
+        # glUniform1f(uniform_location_size, width_window*height_window/(tensorHeight*tensorWidth*25))
 
 
     imgui.create_context()
@@ -288,13 +293,13 @@ def show_2d_tensor(tensor):
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
 
+    glClearColor(0.1, 0.1, 0.1, 1.0)
     # Render loop
     while not glfw.window_should_close(window):
         glfw.poll_events()
         impl.process_inputs()
         imgui.new_frame()
         imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy)
-        glClearColor(0.2, 0.3, 0.3, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
         currentTime = time.time()
         timeDiff = currentTime - lastTime
@@ -346,11 +351,18 @@ def show_2d_tensor(tensor):
 
 
 
-## example
-numpyArray = np.array([[0.1, 0.2, 0.3 ],
-                       [0.4, 0.5, 0.6],
-                       [0.7, 0.8, 0.9],
-                       [1.0, 0.9, 0.8],])
+# ## example
+# numpyArray = np.array([[0.1, 0.2, 0.3 ],
+#                        [0.4, 0.5, 0.6],
+#                        [0.7, 0.8, 0.9],
+#                        [1.0, 0.9, 0.8],])
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.float32,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+
+numpyArray=np.random.uniform(-0.5,1.5,(1000,100))
 tensor = torch.tensor(numpyArray,
                       dtype=torch.float32,
                       device=torch.device('cuda:0'))

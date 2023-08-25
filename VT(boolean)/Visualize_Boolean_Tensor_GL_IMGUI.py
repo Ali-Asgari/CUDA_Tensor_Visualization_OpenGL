@@ -26,17 +26,20 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
     imgui.set_next_window_size(width_window/8, height_window)
     window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
+    style = imgui.get_style()
+    style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+    style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     with imgui.begin("Vertecies:",flags=flags):
+            imgui.text("N:"+str(tensorWidth*tensorHeight))
             for i in range(tensorHeight):
                 for j in range(tensorWidth):
                     if i == click_row and j==click_col:
-                        imgui.get_style().colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                        imgui.get_style().colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                        
+                        style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
+                        style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
                     else:
-                        imgui.get_style().colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                        imgui.get_style().colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
+                        style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+                        style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
                     if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
                         click_col = j
                         click_row = i
@@ -237,7 +240,7 @@ def show_2d_tensor(tensor):
     glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
     glEnable(GL_PROGRAM_POINT_SIZE)
     lastTime = time.time()
-    lastTime2 = time.time()
+    # lastTime2 = time.time()
     frameNumber = 0
 
 
@@ -262,18 +265,17 @@ def show_2d_tensor(tensor):
         glUniform1f(uniform_location_size, 1.0)
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
+    glClearColor(0.1, 0.1, 0.1, 1.0)
     # Render loop
     while not glfw.window_should_close(window):
         glfw.poll_events()
         impl.process_inputs()
         imgui.new_frame()
         imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy)
-
-        glClearColor(0.2, 0.3, 0.3, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
         currentTime = time.time()
         timeDiff = currentTime - lastTime
-        timeDiff2 = currentTime - lastTime2
+        # timeDiff2 = currentTime - lastTime2
         frameNumber += 1
         if timeDiff >= 1.0 / 10.0:
             glfw.set_window_title(window, "FPS: "+str(int((1.0 / timeDiff) * frameNumber)))
