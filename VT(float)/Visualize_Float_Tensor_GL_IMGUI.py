@@ -25,12 +25,10 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
     circle_pos_y = height_window/(tensorHeight+1) * (tensorHeight-click_row)
     imgui.set_next_window_position(0, 0)
     imgui.set_next_window_size(width_window/8, height_window)
-    window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
-    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
+    # window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
+    # imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
     style = imgui.get_style()
-    style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-    style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     with imgui.begin("Vertecies:",flags=flags):
             imgui.text("N:"+str(tensorWidth*tensorHeight))
@@ -47,10 +45,11 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
                         click_row = i
                         glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(j+1))
                         glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(i+1))
+    style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+    style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
     imgui.set_next_window_position(width_window/8, 0)
     imgui.set_next_window_size(width_window-2*width_window/8, height_window)
-    window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
-    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 0.01)
+    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 0.01)
     flags = imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     if click_row != -1 and click_col != -1:
         with imgui.begin("output",flags=flags):
@@ -69,8 +68,8 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
             draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
     imgui.set_next_window_position(7*width_window/8, 2*height_window/3)
     imgui.set_next_window_size(width_window/8, height_window)
-    window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
-    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (*window_bg_color[:3], 1.0)
+    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
+
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     if click_row != -1 and click_col != -1:
         with imgui.begin("Change:",flags=flags):
