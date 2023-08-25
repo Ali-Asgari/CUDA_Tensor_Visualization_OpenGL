@@ -38,14 +38,10 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
             imgui.text("N:"+str(tensorWidth*tensorHeight))
             _, click_row = imgui.input_int(':row', click_row)
             _, click_col = imgui.input_int(':col', click_col)
-
             if click_row <= -1:click_row = tensorHeight- 1
             if click_col <= -1:click_col = tensorWidth-1 
-
-
             if click_row >= tensorHeight:click_row = 0 
             if click_col >= tensorWidth:click_col = 0 
-
             if tensorWidth*tensorHeight<=20000:
                 for i in range(tensorHeight):
                     for j in range(tensorWidth):
@@ -58,7 +54,6 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
                         if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
                             click_col = j
                             click_row = i
-
             else:
                 imgui.text("Generate over \n 20000 button \n in python take \n alot of time\n and drop fps")
     style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
@@ -67,34 +62,33 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
     imgui.set_next_window_size(width_window-2*width_window/8, height_window)
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 0.01)
     flags = imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-    if click_row != -1 and click_col != -1:
-        with imgui.begin("output",flags=flags):
-            draw_list = imgui.get_window_draw_list()
+    with imgui.begin("output",flags=flags):
+        draw_list = imgui.get_window_draw_list()
+        thicknes = 5
+        if tensorHeight*tensorWidth<=100:
+            size = 40
+        elif tensorHeight*tensorWidth<=200:
+            size = 25
+        elif tensorHeight*tensorWidth<=10000:
+            thicknes = 2
+            size = 5
+        else:
             thicknes = 5
-            if tensorHeight*tensorWidth<=100:
-                size = 40
-            elif tensorHeight*tensorWidth<=200:
-                size = 25
-            elif tensorHeight*tensorWidth<=10000:
-                thicknes = 2
-                size = 5
-            else:
-                thicknes = 5
-                size = 2
-            draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
+            size = 2
+        draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
+
     imgui.set_next_window_position(7*width_window/8, 2*height_window/3)
     imgui.set_next_window_size(width_window/8, height_window/3)
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
-    if click_row != -1 and click_col != -1:
-        with imgui.begin("Change:",flags=flags):
-            imgui.text("New value:")
-            _, text_val = imgui.input_float('', text_val)
-            if (imgui.button("Change",100,25)):
-                tensor[click_row][click_col]=text_val
-            _,done_to_each = imgui.checkbox("Change value \n automatic", done_to_each)
-            if done_to_each:
-                tensor[click_row][click_col]=text_val
+    with imgui.begin("Change:",flags=flags):
+        imgui.text("New value:")
+        _, text_val = imgui.input_float('', text_val)
+        if (imgui.button("Change",100,25)):
+            tensor[click_row][click_col]=text_val
+        _,done_to_each = imgui.checkbox("Change value \n automatic", done_to_each)
+        if done_to_each:
+            tensor[click_row][click_col]=text_val
             
     imgui.set_next_window_position(7*width_window/8, 0)
     imgui.set_next_window_size(width_window/8, height_window/3)
