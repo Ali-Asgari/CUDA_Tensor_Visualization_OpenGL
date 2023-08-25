@@ -14,15 +14,19 @@ from imgui.integrations.glfw import GlfwRenderer
 width_window = 950
 height_window = 600
 
-click_col = -1
-click_row= -1
+click_col = 0
+click_row= 0
 text_val = 0.0
+done_to_each = False
 def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy):
     global click_col
     global click_row
     global text_val
+    global done_to_each
     circle_pos_x =1/8*width_window + (6/8)*width_window/(tensorWidth+1) * (click_col+1)
     circle_pos_y = height_window/(tensorHeight+1) * (tensorHeight-click_row)
+    glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(click_col+1))
+    glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(click_row+1))
     imgui.set_next_window_position(0, 0)
     imgui.set_next_window_size(width_window/8, height_window)
     # window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
@@ -32,19 +36,31 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     with imgui.begin("Vertecies:",flags=flags):
             imgui.text("N:"+str(tensorWidth*tensorHeight))
-            for i in range(tensorHeight):
-                for j in range(tensorWidth):
-                    if i == click_row and j==click_col:
-                        style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                        style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                    else:
-                        style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                        style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-                    if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
-                        click_col = j
-                        click_row = i
-                        glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(j+1))
-                        glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(i+1))
+            _, click_row = imgui.input_int(':row', click_row)
+            _, click_col = imgui.input_int(':col', click_col)
+
+            if click_row <= -1:click_row = tensorHeight- 1
+            if click_col <= -1:click_col = tensorWidth-1 
+
+
+            if click_row >= tensorHeight:click_row = 0 
+            if click_col >= tensorWidth:click_col = 0 
+
+            if tensorWidth*tensorHeight<=20000:
+                for i in range(tensorHeight):
+                    for j in range(tensorWidth):
+                        if i == click_row and j==click_col:
+                            style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
+                            style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
+                        else:
+                            style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+                            style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
+                        if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
+                            click_col = j
+                            click_row = i
+
+            else:
+                imgui.text("Generate over \n 20000 button \n in python take \n alot of time\n and drop fps")
     style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
     style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
     imgui.set_next_window_position(width_window/8, 0)
@@ -67,17 +83,27 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
                 size = 2
             draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
     imgui.set_next_window_position(7*width_window/8, 2*height_window/3)
-    imgui.set_next_window_size(width_window/8, height_window)
+    imgui.set_next_window_size(width_window/8, height_window/3)
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
-
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     if click_row != -1 and click_col != -1:
         with imgui.begin("Change:",flags=flags):
             imgui.text("New value:")
-            changed, text_val = imgui.input_float('', text_val)
+            _, text_val = imgui.input_float('', text_val)
             if (imgui.button("Change",100,25)):
                 tensor[click_row][click_col]=text_val
+            _,done_to_each = imgui.checkbox("Change value \n automatic", done_to_each)
+            if done_to_each:
+                tensor[click_row][click_col]=text_val
             
+    imgui.set_next_window_position(7*width_window/8, 0)
+    imgui.set_next_window_size(width_window/8, height_window/3)
+    imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
+    flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
+    if click_row != -1 and click_col != -1:
+        with imgui.begin("Information:",flags=flags):
+            imgui.text("Value:")
+            imgui.text(str(tensor[click_row][click_col].item()))
 
 def show_2d_tensor(tensor):
     tensorHeight,tensorWidth = tensor.shape
@@ -364,19 +390,36 @@ def show_2d_tensor(tensor):
 
 
 
-# ## example
-# numpyArray = np.array([[0.1, 0.2, 0.3 ],
-#                        [0.4, 0.5, 0.6],
-#                        [0.7, 0.8, 0.9],
-#                        [1.0, 0.9, 0.8],])
+## example
+numpyArray = np.array([[0.1, 0.2, 0.3 ],
+                       [0.4, 0.5, 0.6],
+                       [0.7, 0.8, 0.9],
+                       [1.0, 0.9, 0.8],])
+tensor = torch.tensor(numpyArray,
+                      dtype=torch.float32,
+                      device=torch.device('cuda:0'))
+show_2d_tensor(tensor)
+
+# numpyArray=np.random.uniform(-0.5,1.5,(10,10))
 # tensor = torch.tensor(numpyArray,
 #                       dtype=torch.float32,
 #                       device=torch.device('cuda:0'))
 # show_2d_tensor(tensor)
 
+# numpyArray=np.random.uniform(-0.5,1.5,(100,100))
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.float32,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
 
-numpyArray=np.random.uniform(-0.5,1.5,(10,10))
-tensor = torch.tensor(numpyArray,
-                      dtype=torch.float32,
-                      device=torch.device('cuda:0'))
-show_2d_tensor(tensor)
+# numpyArray=np.random.uniform(-0.5,1.5,(1000,1000))
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.float32,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+# numpyArray=np.random.uniform(-0.5,1.5,(10000,1000))
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.float32,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
