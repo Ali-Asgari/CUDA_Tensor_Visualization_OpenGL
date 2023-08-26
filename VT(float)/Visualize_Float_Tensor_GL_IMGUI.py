@@ -332,6 +332,16 @@ def show_2d_tensor(tensor):
         set_enable_smooth = False
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
+    ## Handle W A S D on keyboard for selection
+    def keyaction(window, key, scancode, action, mods):
+        global click_row
+        global click_col
+        if key == glfw.KEY_W and (action == glfw.PRESS or action == glfw.REPEAT): click_row+=1
+        if key == glfw.KEY_S and (action == glfw.PRESS or action == glfw.REPEAT): click_row-=1
+        if key == glfw.KEY_D and (action == glfw.PRESS or action == glfw.REPEAT): click_col+=1
+        if key == glfw.KEY_A and (action == glfw.PRESS or action == glfw.REPEAT): click_col-=1
+    glfw.set_key_callback(window,keyaction)
+
     glClearColor(0.05, 0.05, 0.1, 1.0)
     ## Render loop
     while not glfw.window_should_close(window):
