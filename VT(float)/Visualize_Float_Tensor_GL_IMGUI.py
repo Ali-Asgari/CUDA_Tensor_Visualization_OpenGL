@@ -1,18 +1,17 @@
 import torch
 import glfw
-
 from OpenGL.GL import *
 import numpy as np
 from cuda import cudart as cu
-
 import time
-
 import imgui
 from imgui.integrations.glfw import GlfwRenderer
+import math
 
 
 width_window = 950
 height_window = 600
+
 
 click_col = 0
 click_row= 0
@@ -25,6 +24,18 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
     global done_to_each
     circle_pos_x =1/8*width_window + (6/8)*width_window/(tensorWidth+1) * (click_col+1)
     circle_pos_y = height_window/(tensorHeight+1) * (tensorHeight-click_row)
+    if click_row != -1 and click_col != -1:
+        if imgui.is_mouse_down():
+            first_mouse_x, first_mouse_y = imgui.get_mouse_pos()
+            if first_mouse_x >= width_window/8 and first_mouse_x <= 7*width_window/8:
+                mouse_x = first_mouse_x
+                mouse_y = first_mouse_y
+                click_col = math.ceil(math.floor((mouse_x - 1/8*width_window) / ((6/8)*width_window/(2*(tensorWidth+1)))) / 2)-1
+                if click_col == -1: click_col = 0
+                if click_col == tensorWidth: click_col = tensorWidth-1
+                click_row =  tensorHeight - math.ceil(math.floor(mouse_y/(height_window/(2*(tensorHeight+1)))) / 2)
+                if click_row == -1: click_row = 0
+                if click_row == tensorHeight: click_row = tensorHeight-1
     glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(click_col+1))
     glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(click_row+1))
     imgui.set_next_window_position(0, 0)
@@ -76,7 +87,11 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
             thicknes = 2
             size = 4
         draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
-
+        ## invisible button
+        # style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 0.0)
+        # style.colors[imgui.COLOR_BUTTON_ACTIVE] = (0.03, 0.07, 0.22, 0.0)
+        # style.colors[imgui.COLOR_BUTTON_HOVERED] = (0.03, 0.07, 0.22, 0.0)
+        # if (imgui.button("",width_window-2*width_window/8,(97/100)*height_window)):
     imgui.set_next_window_position(7*width_window/8, 2*height_window/3)
     imgui.set_next_window_size(width_window/8, height_window/3)
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
@@ -88,8 +103,7 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
             tensor[click_row][click_col]=text_val
         _,done_to_each = imgui.checkbox("Change value \n automatic", done_to_each)
         if done_to_each:
-            tensor[click_row][click_col]=text_val
-            
+            tensor[click_row][click_col]=text_val 
     imgui.set_next_window_position(7*width_window/8, 0)
     imgui.set_next_window_size(width_window/8, height_window/3)
     imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
@@ -110,7 +124,7 @@ def show_2d_tensor(tensor):
     X4=torch.cat((X3,tens3),1)
     tensor2=X4
 
-    # Vertex shader source code
+    ## Vertex shader source code
     VERTEX_SHADER = """
     #version 330 core
 
@@ -141,8 +155,7 @@ def show_2d_tensor(tensor):
         }
     }
     """
-
-    # Fragment shader source code
+    ## Fragment shader source code
     FRAGMENT_SHADER = """
     #version 330 core
 
@@ -172,7 +185,6 @@ def show_2d_tensor(tensor):
     }
     """
 
-
     ## example : 
     # vertices = np.array([
     #         #positions                     // texture coords
@@ -199,7 +211,7 @@ def show_2d_tensor(tensor):
     vertices[index+2] = -1.0
     vertices[index+3] = -1+(0+1)/(tensorWidth+1)
     vertices[index+4] = -1+(0+1)/(tensorHeight+1)
-    # Callback function for window resize
+    ##  Callback function for window resize
     def framebuffer_size_callback(window, width, height):
         global width_window
         global height_window
@@ -210,55 +222,49 @@ def show_2d_tensor(tensor):
 
     imgui.create_context()
 
-    # Initialize GLFW
+    ## Initialize GLFW
     if not glfw.init():
         raise Exception("GLFW initialization failed")
 
-    # glfw.window_hint(glfw.DOUBLEBUFFER, glfw.TRUE)
-
-    # Create a GLFW window
+    ## Create a GLFW window
     window = glfw.create_window(width_window, height_window, "OpenGL Window", None, None)
     if not window:
         glfw.terminate()
         raise Exception("GLFW window creation failed")
 
-
-
-    # Make the window's context current
+    ## Make the window's context current
     glfw.make_context_current(window)
+
+    ## disable vsync
+    glfw.swap_interval(0)
 
     impl = GlfwRenderer(window)
 
-    # Set the callback function for window resize
+    ## Set the callback function for window resize
     glfw.set_framebuffer_size_callback(window, framebuffer_size_callback)
-    # Create and compile the vertex shader
+    
+    ## Create and compile the vertex shader
     vertex_shader = glCreateShader(GL_VERTEX_SHADER)
     glShaderSource(vertex_shader, VERTEX_SHADER)
     glCompileShader(vertex_shader)
-
-    # Create and compile the fragment shader
+    ## Create and compile the fragment shader
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER)
     glShaderSource(fragment_shader, FRAGMENT_SHADER)
     glCompileShader(fragment_shader)
-
-    # Create the shader program and link the shaders
+    ## Create the shader program and link the shaders
     shader_program = glCreateProgram()
     glAttachShader(shader_program, vertex_shader)
     glAttachShader(shader_program, fragment_shader)
     glLinkProgram(shader_program)
-
-    # Delete the shaders (they are no longer needed)
+    ## Delete the shaders (they are no longer needed)
     glDeleteShader(vertex_shader)
     glDeleteShader(fragment_shader)
 
-
-    # find uniform locations
+    ## find uniform locations
     uniform_location_size = glGetUniformLocation(shader_program, "uSize")
     uniform_location_size_data = glGetUniformLocation(shader_program, "uSizeData")
     uniform_location_locx = glGetUniformLocation(shader_program, "uLocx")
     uniform_location_locy = glGetUniformLocation(shader_program, "uLocy")
-
-
 
     #!!! most importat section to start cuda and openGL interop
     vao = glGenVertexArrays(1)
@@ -279,11 +285,11 @@ def show_2d_tensor(tensor):
         GL_FLOAT,
         None,
     )
+
     glBindTexture(GL_TEXTURE_2D, 0)
 
     err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
-
-    ### !!! Register texture to cuda can access to it
+    # !!! Register texture to cuda can access to it
     err, cuda_image = cu.cudaGraphicsGLRegisterImage(
         color,
         GL_TEXTURE_2D,
@@ -298,10 +304,8 @@ def show_2d_tensor(tensor):
     lastTime = time.time()
     frameNumber = 0
 
-
     ## maximize at start
     # glfw.maximize_window(window)
-
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glEnableVertexAttribArray(0)
@@ -327,7 +331,6 @@ def show_2d_tensor(tensor):
         glUniform1f(uniform_location_size, 0.25)
         set_enable_smooth = False
     glUniform1f(uniform_location_size_data, width_window/8.5)
-
 
     glClearColor(0.05, 0.05, 0.1, 1.0)
     ## Render loop
@@ -411,6 +414,12 @@ show_2d_tensor(tensor)
 # show_2d_tensor(tensor)
 
 # numpyArray=np.random.uniform(-0.5,1.5,(100,100))
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.float32,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+# numpyArray=np.random.uniform(-0.5,1.5,(200,100))
 # tensor = torch.tensor(numpyArray,
 #                       dtype=torch.float32,
 #                       device=torch.device('cuda:0'))
