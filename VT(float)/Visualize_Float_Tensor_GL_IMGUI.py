@@ -27,15 +27,15 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
     if click_row != -1 and click_col != -1:
         if imgui.is_mouse_down():
             first_mouse_x, first_mouse_y = imgui.get_mouse_pos()
-            if first_mouse_x >= width_window/8 and first_mouse_x <= 7*width_window/8:
+            if (first_mouse_x >= width_window/8 and first_mouse_x <= 7*width_window/8) and (first_mouse_y >= 0 and first_mouse_y <= height_window):
                 mouse_x = first_mouse_x
                 mouse_y = first_mouse_y
                 click_col = math.ceil(math.floor((mouse_x - 1/8*width_window) / ((6/8)*width_window/(2*(tensorWidth+1)))) / 2)-1
-                if click_col == -1: click_col = 0
-                if click_col == tensorWidth: click_col = tensorWidth-1
+                if click_col <= -1: click_col = 0
+                if click_col >= tensorWidth: click_col = tensorWidth-1
                 click_row =  tensorHeight - math.ceil(math.floor(mouse_y/(height_window/(2*(tensorHeight+1)))) / 2)
-                if click_row == -1: click_row = 0
-                if click_row == tensorHeight: click_row = tensorHeight-1
+                if click_row <= -1: click_row = 0
+                if click_row >= tensorHeight: click_row = tensorHeight-1
     glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(click_col+1))
     glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(click_row+1))
     imgui.set_next_window_position(0, 0)
