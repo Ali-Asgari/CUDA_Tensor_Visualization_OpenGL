@@ -66,15 +66,15 @@ def imgui_render(tensor,tensorWidth,tensorHeight,uniform_location_locx,uniform_l
         draw_list = imgui.get_window_draw_list()
         thicknes = 5
         if tensorHeight*tensorWidth<=100:
-            size = 40
+            size = 30
         elif tensorHeight*tensorWidth<=200:
             size = 25
         elif tensorHeight*tensorWidth<=10000:
             thicknes = 2
             size = 5
         else:
-            thicknes = 5
-            size = 2
+            thicknes = 2
+            size = 4
         draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
 
     imgui.set_next_window_position(7*width_window/8, 2*height_window/3)
@@ -280,8 +280,7 @@ def show_2d_tensor(tensor):
         None,
     )
     glBindTexture(GL_TEXTURE_2D, 0)
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
     err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
 
     ### !!! Register texture to cuda can access to it
@@ -295,7 +294,7 @@ def show_2d_tensor(tensor):
     glBindVertexArray(vao)
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
-    glEnable(GL_PROGRAM_POINT_SIZE)
+
     lastTime = time.time()
     frameNumber = 0
 
@@ -311,6 +310,12 @@ def show_2d_tensor(tensor):
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*4, ctypes.c_void_p(0+3*4))
     glBindTexture(GL_TEXTURE_2D,color)
     # glBindVertexArray(0)
+    
+    ## points shape change from square to circle
+    glEnable(GL_PROGRAM_POINT_SIZE)
+    glEnable(GL_POINT_SMOOTH)
+    set_enable_smooth = True
+
     glUseProgram(shader_program)
     if tensorHeight*tensorWidth<=100:
         glUniform1f(uniform_location_size, 50.0)
@@ -319,13 +324,13 @@ def show_2d_tensor(tensor):
     elif tensorHeight*tensorWidth<=10000:
         glUniform1f(uniform_location_size, 5.0)
     else:
-        glUniform1f(uniform_location_size, 1.0)
-    # glUniform1f(uniform_location_size, (6/8)*width_window*height_window/(tensorHeight*tensorWidth*1000))#,1.0)
+        glUniform1f(uniform_location_size, 0.25)
+        set_enable_smooth = False
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
 
-    glClearColor(0.1, 0.1, 0.1, 1.0)
-    # Render loop
+    glClearColor(0.05, 0.05, 0.1, 1.0)
+    ## Render loop
     while not glfw.window_should_close(window):
         glfw.poll_events()
         impl.process_inputs()
@@ -363,18 +368,25 @@ def show_2d_tensor(tensor):
 
         glBindVertexArray(vao)
         if click_row != -1 and click_col != -1: 
-            glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
+            # glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
+            ## for big number like million if points will be like square specify more details 
+            ## last vertex show value of seleceted index and show that in circle shape
+            if set_enable_smooth:
+                glEnable(GL_POINT_SMOOTH)
+            else:
+                glDisable(GL_POINT_SMOOTH)
+            glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth)
+            glEnable(GL_POINT_SMOOTH)
+            glDrawArrays(GL_POINTS, tensorHeight*tensorWidth,1)
         else: 
             glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth)
-
         imgui.render()
         impl.render(imgui.get_draw_data())
 
-        
-        # Swap buffers and poll events
+        ## Swap buffers and poll events
         glfw.swap_buffers(window)
         glfw.poll_events()
-    # Cleanup
+    ## Cleanup
     glDeleteProgram(shader_program)
     glDeleteBuffers(1, [vbo])
     impl.shutdown()
@@ -399,6 +411,12 @@ show_2d_tensor(tensor)
 # show_2d_tensor(tensor)
 
 # numpyArray=np.random.uniform(-0.5,1.5,(100,100))
+# tensor = torch.tensor(numpyArray,
+#                       dtype=torch.float32,
+#                       device=torch.device('cuda:0'))
+# show_2d_tensor(tensor)
+
+# numpyArray=np.random.uniform(-0.5,1.5,(10000,100))
 # tensor = torch.tensor(numpyArray,
 #                       dtype=torch.float32,
 #                       device=torch.device('cuda:0'))
