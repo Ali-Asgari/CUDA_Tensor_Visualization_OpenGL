@@ -39,10 +39,10 @@ Visualization of a PyTorch tensor on Cuda device using OpenGL, without the need 
 
 ## Usage
 
-### Float values
+### Float Values
     python Float(Advance)/Visualize_Float_Tensor_GL_IMGUI.py
 
 <hr>
 
-### Boolean values and more basic functionality
+### Boolean Values and Basic Functionality
     python Boolean(Basic)/Visualize_Boolean_Tensor_GL_IMGUI.py
