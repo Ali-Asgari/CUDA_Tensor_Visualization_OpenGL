@@ -17,7 +17,7 @@ Visualization of a PyTorch tensor on Cuda device using OpenGL, without the need 
     <img src="./FloatEX1.png" alt="drawing" />
 </p>
 
-## Feature
+## Features
 - **Efficient GPU Rendering:** Avoids data transfer to the CPU, maximizing performance. 
 - **Handling Large Tensors:** Capable of handling tensors with dimensions up to 1000x1000.
 - **Real-time Performance:** Provides high-performance rendering for responsive visualization (FPS>100 on 1050-ti).
@@ -26,7 +26,7 @@ Visualization of a PyTorch tensor on Cuda device using OpenGL, without the need 
 - **Keyboard and Mouse Functionality:** Supports 'W', 'A', 'S', 'D' keys and mouse functionality for selection.
 
 
-## Reqirment
+## Requirements
 - **CUDA 11.8**
 - **PyTorch 2.0.1**
 - **GLFW**
