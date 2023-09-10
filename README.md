@@ -29,8 +29,6 @@ Visualization of a PyTorch tensor on Cuda device using OpenGL, without the need 
 ## Reqirment
 - **CUDA 11.8**
 - **PyTorch 2.0.1**
-
-
 - **GLFW**
 - **IMGUI**
 - **PyOpenGL**
