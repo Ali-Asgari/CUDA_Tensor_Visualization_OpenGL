@@ -266,6 +266,7 @@ def show_2d_tensor(tensor):
     glUniform1f(uniform_location_size_data, width_window/8.5)
 
     glClearColor(0.1, 0.1, 0.1, 1.0)
+    glfw.swap_interval(0)
     # Render loop
     while not glfw.window_should_close(window):
         glfw.poll_events()
