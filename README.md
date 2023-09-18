@@ -1,6 +1,6 @@
 ## Visualization of Cuda tensors with OpenGL
 
-Visualization of a PyTorch tensor on Cuda device using OpenGL, without the need to transfer data to the CPU. The visualization is real-time, meaning that any changes to the tensor within the render loop will be immediately represented.
+Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the need to transfer data to the CPU. The visualization is real-time, meaning that any changes to the tensor within the render loop will be immediately represented.
 
 ## Example
     numpyArray = np.array([[0.1, 0.2, 0.3],
@@ -26,12 +26,13 @@ Visualization of a PyTorch tensor on Cuda device using OpenGL, without the need 
 - **Keyboard and Mouse Functionality:** Supports 'W', 'A', 'S', 'D' keys and mouse functionality for selection.
 
 
-## Requirements
+## Dependencies
 - **CUDA 11.8**
 - **PyTorch 2.0.1**
+- **CUDA-PYTHON**
 - **GLFW**
-- **IMGUI**
 - **PyOpenGL**
+- **PYIMGUI**
 - **numpy**
 
 ### Install PyTorch with CUDA 11.8
