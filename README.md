@@ -27,6 +27,7 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
 <p align="center">
     <img src="./BoolEX1.png" alt="drawing" />
 </p>
+
 ## Features
 - **Efficient GPU Rendering:** Avoids data transfer to the CPU, maximizing performance. 
 - **Handling Large Tensors:** Capable of handling tensors with dimensions up to 1000x1000.
