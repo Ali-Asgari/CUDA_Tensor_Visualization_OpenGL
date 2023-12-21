@@ -2,7 +2,7 @@
 
 Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the need to transfer data to the CPU. The visualization is real-time, meaning that any changes to the tensor within the render loop will be immediately represented.
 
-## Example
+## Example for float values
     numpyArray = np.array([[0.1, 0.2, 0.3],
                            [0.4, 0.5, 0.6],
                            [0.7, 0.8, 0.9],
@@ -17,6 +17,16 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
     <img src="./FloatEX1.png" alt="drawing" />
 </p>
 
+## Example for boolean values
+    numpyArray = np.array([[True, False, True ],
+                        [False, True, True],])
+    tensor = torch.tensor(numpyArray,
+                        dtype=torch.bool,
+                        device=torch.device('cuda:0'))
+    show_2d_tensor(tensor)
+<p align="center">
+    <img src="./BoolEX1.png" alt="drawing" />
+</p>
 ## Features
 - **Efficient GPU Rendering:** Avoids data transfer to the CPU, maximizing performance. 
 - **Handling Large Tensors:** Capable of handling tensors with dimensions up to 1000x1000.
