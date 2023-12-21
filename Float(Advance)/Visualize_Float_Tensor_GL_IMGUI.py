@@ -64,21 +64,8 @@ class GUI:
 
         void main()
         {
-            if (Isdata == 1.0){
-                if (texture(ourTexture, TexCoord).g >= 1.0){
-                    FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-                }
-                else{
-                    FragColor = vec4(texture(ourTexture, TexCoord).ggg, 1.0f);
-                }
-            }
-            else{
-                if (texture(ourTexture, TexCoord).g>=1.0)
-                    FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
-                else
-                    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-                    //FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-            }
+            FragColor = vec4(texture(ourTexture, TexCoord).ggg, 1.0f);
+           
         }
         """
     def imguiUI(self):
