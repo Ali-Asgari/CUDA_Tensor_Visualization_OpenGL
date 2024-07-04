@@ -9,10 +9,10 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
                            [1.0, 0.9, 0.8],])
                         
     tensor = torch.tensor(numpyArray,
-                        dtype=torch.float32,
+                        dtype=torch.float16,
                         device=torch.device('cuda:0'))
 
-    GUI(tensor).initializeOpenGL()
+    GUI(tensor).renderOpenGL()
 <p align="center">
     <img src="./FloatEX1.png" alt="drawing" />
 </p>
