@@ -13,6 +13,7 @@ import math
 class GUI:
     def __init__(self, tensor, width=1000, heigh=600):
         self.tensor = tensor
+        self.elementSize = tensor.element_size()
         self.tensorHeight,self.tensorWidth = tensor.shape
         self.windowWidth = width
         self.windowHeigh = heigh
@@ -64,12 +65,11 @@ class GUI:
 
         void main()
         {
-            FragColor = vec4(texture(ourTexture, TexCoord).ggg, 1.0f);
-           
+            FragColor = vec4(texture(ourTexture, TexCoord).rrr, 1.0f);
         }
         """
-    def imguiUI(self):
 
+    def imguiUI(self):
         if imgui.is_mouse_down():
             first_mouse_x, first_mouse_y = imgui.get_mouse_pos()
             if (first_mouse_x >= self.windowWidth/8 and first_mouse_x <= 7*self.windowWidth/8) and (first_mouse_y >= 0 and first_mouse_y <= self.windowHeigh):
@@ -151,7 +151,7 @@ class GUI:
                 self.tensor[self.selectedY][self.selectedX]=self.inputValue
             _,self.applyToAll = imgui.checkbox("Change value \n if has been \n selected", self.applyToAll)
             if self.applyToAll:
-                tensor[self.selectedY][self.selectedX]=self.inputValue 
+                self.tensor[self.selectedY][self.selectedX]=self.inputValue 
         imgui.set_next_window_position(7*self.windowWidth/8, 0)
         imgui.set_next_window_size(self.windowWidth/8, self.windowHeigh/3)
         imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND] = (0.18,0.18,0.18, 1.0)
@@ -160,25 +160,8 @@ class GUI:
             with imgui.begin("Information:",flags=flags):
                 imgui.text("Value:")
                 imgui.text(str(self.tensor[self.selectedY][self.selectedX].item()))
-    def initializeOpenGL(self):
-        X=((torch.reshape(self.tensor, (1,self.tensorHeight*self.tensorWidth))).squeeze(0)).reshape(self.tensorHeight*self.tensorWidth,1)
-        tens2 = torch.zeros([self.tensorHeight*self.tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-        X2=torch.cat((X,tens2),1)
-        X3=torch.cat((tens2,X2),1)
-        tens3 = torch.ones([self.tensorHeight*self.tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-        X4=torch.cat((X3,tens3),1)
-        tensor2=X4
-            ## example : 
-        # vertices = np.array([
-        #         #positions                     // texture coords
-        #         -0.5,  0.33, 0.0,      0.25,0.33,     #0,0
-        #         0.0,  0.33, 0.0,      0.50,0.33,     #1.0, 
-        #         0.5,  0.33, 0.0,      0.75,0.33,     #0.0, 
-        #         -0.5, -0.33, 0.0,      0.25,0.66,     #1.0, 
-        #         0.0, -0.33, 0.0,      0.50,0.66,     #0.0, 
-        #         0.5, -0.33, 0.0,      0.75,0.66,     #1.0, 
-        
-        # ], dtype=np.float32)
+
+    def renderOpenGL(self):
         vertices = np.zeros((self.tensorHeight*self.tensorWidth*5+5),dtype=np.float32)
         index=0
         for i in range(self.tensorWidth):
@@ -254,7 +237,10 @@ class GUI:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        glTexImage2D(GL_TEXTURE_2D,0, GL_RGBA32F, self.tensorWidth, self.tensorHeight, 0, GL_RGBA, GL_FLOAT, None)
+        if self.elementSize == 2:
+            glTexImage2D(GL_TEXTURE_2D,0, GL_R16F, self.tensorWidth, self.tensorHeight, 0, GL_RED, GL_FLOAT, None)
+        elif self.elementSize == 4:
+            glTexImage2D(GL_TEXTURE_2D,0, GL_R32F, self.tensorWidth, self.tensorHeight, 0, GL_RED, GL_FLOAT, None)
         glBindTexture(GL_TEXTURE_2D, 0)
 
         err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
@@ -302,8 +288,7 @@ class GUI:
             if key == glfw.KEY_D and (action == glfw.PRESS or action == glfw.REPEAT): self.selectedX += 1
             if key == glfw.KEY_A and (action == glfw.PRESS or action == glfw.REPEAT): self.selectedX -=1
         glfw.set_key_callback(self.window,keyaction)
-        self.renderOpenGL()
-    def renderOpenGL(self):
+        
         # glClearColor(0.05, 0.05, 0.1, 1.0)
         glClearColor(0.15, 0.16, 0.21, 1.0)
         ## Render loop
@@ -324,22 +309,15 @@ class GUI:
                 glfw.set_window_title(self.window, "FPS: "+str(int((1.0 / timeDiff) * frameNumber)))
                 frameNumber = 0
                 lastTime = currentTime
-            X=((torch.reshape(tensor, (1,self.tensorHeight*self.tensorWidth))).squeeze(0)).reshape(self.tensorHeight*self.tensorWidth,1)
-            tens2 = torch.zeros([self.tensorHeight*self.tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-            X2=torch.cat((X,tens2),1)
-            X3=torch.cat((tens2,X2),1)
-            tens3 = torch.ones([self.tensorHeight*self.tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-            X4=torch.cat((X3,tens3),1)
-            tensor2=X4
             (err,) = cu.cudaGraphicsMapResources(1, self.cuda_image, cu.cudaStreamLegacy)
             err, array = cu.cudaGraphicsSubResourceGetMappedArray(self.cuda_image, 0, 0)
             (err,) = cu.cudaMemcpy2DToArrayAsync(
                 array,
                 0,
                 0,
-                tensor2.data_ptr(),
-                4*4*self.tensorWidth,
-                4*4*self.tensorWidth,
+                self.tensor.data_ptr(),
+                self.elementSize*self.tensorWidth,
+                self.elementSize*self.tensorWidth,
                 self.tensorHeight,
                 cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
                 cu.cudaStreamLegacy,
@@ -375,58 +353,14 @@ numpyArray = np.array([[0.1, 0.2, 0.3 ],
                        [0.7, 0.8, 0.9],
                        [1.0, 0.9, 0.8],])
 tensor = torch.tensor(numpyArray,
-                      dtype=torch.float32,
+                      dtype=torch.float16,
                       device=torch.device('cuda:0'))
-GUI(tensor).initializeOpenGL()
+GUI(tensor).renderOpenGL()
 
 
-## example
-# a = XX()
-# a.show_2d_tensor()
-# input()
-# show_2d_tensor(tensor)
-# import threading
-# t1 = threading.Thread(target=a.show_2d_tensor)
-
-# t1.start()
-# numpyArray=np.random.uniform(-0.5,1.5,(10,10))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-# numpyArray=np.random.uniform(-0.5,1.5,(100,100))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-# numpyArray=np.random.uniform(-0.5,-0.5,(201,100))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-# numpyArray=np.random.uniform(-0.5,1.5,(200,100))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-# numpyArray=np.random.uniform(-0.5,1.5,(10000,100))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
+## example 2
 # numpyArray=np.random.uniform(-0.5,1.5,(1000,1000))
 # tensor = torch.tensor(numpyArray,
 #                       dtype=torch.float32,
 #                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-# numpyArray=np.random.uniform(-0.5,1.5,(10000,1000))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
+# GUI(tensor).renderOpenGL()
