@@ -67,13 +67,6 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
             draw_list.add_circle(circle_pos_x, circle_pos_y, size, imgui.get_color_u32_rgba(1.0, 1.0, 1.0, 10.0),100, thicknes)
 def show_2d_tensor(tensor):
     tensorHeight,tensorWidth = tensor.shape
-    X=((torch.reshape(tensor, (1,tensorHeight*tensorWidth))).squeeze(0)).reshape(tensorHeight*tensorWidth,1)
-    tens2 = torch.zeros([tensorHeight*tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-    X2=torch.cat((X,tens2),1)
-    X3=torch.cat((tens2,X2),1)
-    tens3 = torch.ones([tensorHeight*tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-    X4=torch.cat((X3,tens3),1)
-    tensor2=X4
 
     # Vertex shader source code
     VERTEX_SHADER = """
@@ -112,27 +105,16 @@ def show_2d_tensor(tensor):
     
     in vec2 TexCoord;
 
-    uniform sampler2D ourTexture;
+    uniform usampler2D ourTexture;
 
     void main()
     {
-
-        if (texture(ourTexture, TexCoord).g==1.0)
+        if (texture(ourTexture, TexCoord).r == 1.0f)
             FragColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);
         else
             FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
     }
     """
-    # example : 
-    # vertices = np.array([
-    #         #positions                     // texture coords
-    #         -0.5,  0.33, 0.0,      0.25,0.33,     #0,0
-    #         0.0,  0.33, 0.0,      0.50,0.33,     #1.0, 
-    #         0.5,  0.33, 0.0,      0.75,0.33,     #0.0, 
-    #         -0.5, -0.33, 0.0,      0.25,0.66,     #1.0, 
-    #         0.0, -0.33, 0.0,      0.50,0.66,     #0.0, 
-    #         0.5, -0.33, 0.0,      0.75,0.66,     #1.0, 
-    # ], dtype=np.float32)
 
     vertices = np.zeros((tensorHeight*tensorWidth*5+5),dtype=np.float32)
     index=0
@@ -215,17 +197,17 @@ def show_2d_tensor(tensor):
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        GL_RGBA32F,
+        GL_R8UI,
         tensorWidth,
         tensorHeight,
         0,
-        GL_RGBA,
-        GL_FLOAT,
+        GL_RED_INTEGER,
+        GL_UNSIGNED_INT,
         None,
     )
     glBindTexture(GL_TEXTURE_2D, 0)
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    # glEnable(GL_BLEND)
+    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     err, *_ = cu.cudaGLGetDevices(1, cu.cudaGLDeviceList.cudaGLDeviceListAll)
     ### !!! Register texture to cuda can access to it
     err, cuda_image = cu.cudaGraphicsGLRegisterImage(
@@ -286,22 +268,15 @@ def show_2d_tensor(tensor):
         # if timeDiff2 >= 0.5:
         #     tensor = ~tensor
         #     lastTime2 = currentTime
-        X=((torch.reshape(tensor, (1,tensorHeight*tensorWidth))).squeeze(0)).reshape(tensorHeight*tensorWidth,1)
-        tens2 = torch.zeros([tensorHeight*tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-        X2=torch.cat((X,tens2),1)
-        X3=torch.cat((tens2,X2),1)
-        tens3 = torch.ones([tensorHeight*tensorWidth,1], dtype=torch.float, device=torch.device('cuda:0'))
-        X4=torch.cat((X3,tens3),1)
-        tensor2=X4
         (err,) = cu.cudaGraphicsMapResources(1, cuda_image, cu.cudaStreamLegacy)
         err, array = cu.cudaGraphicsSubResourceGetMappedArray(cuda_image, 0, 0)
         (err,) = cu.cudaMemcpy2DToArrayAsync(
             array,
             0,
             0,
-            tensor2.data_ptr(),
-            4*4*tensorWidth,
-            4*4*tensorWidth,
+            tensor.to(torch.uint8).data_ptr(),
+            tensorWidth,
+            tensorWidth,
             tensorHeight,
             cu.cudaMemcpyKind.cudaMemcpyDeviceToDevice,
             cu.cudaStreamLegacy,
@@ -326,8 +301,6 @@ def show_2d_tensor(tensor):
     impl.shutdown()
     glfw.terminate()
 
-
-
 ## example 1
 numpyArray = np.array([[True, False, True ],
                        [False, True, True],])
@@ -336,36 +309,9 @@ tensor = torch.tensor(numpyArray,
                       device=torch.device('cuda:0'))
 show_2d_tensor(tensor)
 
-# rng= np.random.default_rng()
-# numpyArray= rng.integers(0,1,(10,10),endpoint= True).astype('bool')
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.bool,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
 ## example 2
-
 # rng= np.random.default_rng()
-# numpyArray= rng.integers(0,1,(20,10),endpoint= True).astype('bool')
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.bool,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-## example 3 
-
-# rng= np.random.default_rng()
-# numpyArray= rng.integers(0,1,(100,10),endpoint= True).astype('bool')
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.bool,
-#                       device=torch.device('cuda:0'))
-# show_2d_tensor(tensor)
-
-
-## example 4
-
-# rng= np.random.default_rng()
-# numpyArray= rng.integers(0,1,(1000,100),endpoint= True).astype('bool')
+# numpyArray= rng.integers(0,1,(100,100),endpoint= True).astype('bool')
 # tensor = torch.tensor(numpyArray,
 #                       dtype=torch.bool,
 #                       device=torch.device('cuda:0'))
