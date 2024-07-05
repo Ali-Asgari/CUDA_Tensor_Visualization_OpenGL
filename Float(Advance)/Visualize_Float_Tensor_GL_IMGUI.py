@@ -99,20 +99,20 @@ class GUI:
                 if self.selectedY >= self.tensorHeight:self.selectedY = 0 
                 if self.selectedX <= -1:self.selectedX = self.tensorWidth-1 
                 if self.selectedX >= self.tensorWidth:self.selectedX = 0 
-                if self.tensorWidth*self.tensorHeight<=20000:
-                    for i in range(self.tensorHeight):
-                        for j in range(self.tensorWidth):
-                            if i == self.selectedY and j==self.selectedX:
-                                style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                                style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                            else:
-                                style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                                style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-                            if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
-                                self.selectedX = j
-                                self.selectedY = i
-                else:
-                    imgui.text("Generate over \n 20000 button \n in python take \n alot of time\n and drop fps")
+                # if self.tensorWidth*self.tensorHeight<=20000:
+                #     for i in range(self.tensorHeight):
+                #         for j in range(self.tensorWidth):
+                #             if i == self.selectedY and j==self.selectedX:
+                #                 style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
+                #                 style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
+                #             else:
+                #                 style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+                #                 style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
+                #             if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
+                #                 self.selectedX = j
+                #                 self.selectedY = i
+                # else:
+                #     imgui.text("Generate over \n 20000 button \n in python take \n alot of time\n and drop fps")
         style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
         style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
         imgui.set_next_window_position(self.windowWidth/8, 0)

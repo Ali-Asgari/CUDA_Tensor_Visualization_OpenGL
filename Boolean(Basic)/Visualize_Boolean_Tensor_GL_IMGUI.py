@@ -11,17 +11,17 @@ import imgui
 from imgui.integrations.glfw import GlfwRenderer
 
 
-width_window = 800
+width_window = 1000
 height_window = 600
 
 
-click_col = -1
-click_row= -1
+selectedX = 0
+selectedY = 0
 def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location_locy):
-    global click_col
-    global click_row
-    circle_pos_x =1/8*width_window + (6/8)*width_window/(tensorWidth+1) * (click_col+1)
-    circle_pos_y = height_window/(tensorHeight+1) * (tensorHeight-click_row)
+    global selectedX
+    global selectedY
+    circle_pos_x =1/8*width_window + (6/8)*width_window/(tensorWidth+1) * (selectedX+1)
+    circle_pos_y = height_window/(tensorHeight+1) * (tensorHeight-selectedY)
     imgui.set_next_window_position(0, 0)
     imgui.set_next_window_size(width_window/8, height_window)
     window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
@@ -32,19 +32,28 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
     flags = imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     with imgui.begin("Vertecies:",flags=flags):
             imgui.text("N:"+str(tensorWidth*tensorHeight))
-            for i in range(tensorHeight):
-                for j in range(tensorWidth):
-                    if i == click_row and j==click_col:
-                        style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                        style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                    else:
-                        style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                        style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-                    if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
-                        click_col = j
-                        click_row = i
-                        glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(j+1))
-                        glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(i+1))
+            changed1, selectedY = imgui.input_int(':row', selectedY)
+            changed2, selectedX = imgui.input_int(':col', selectedX)
+            if selectedY <= -1:selectedY = tensorHeight- 1
+            if selectedY >= tensorHeight:selectedY = 0 
+            if selectedX <= -1:selectedX = tensorWidth-1 
+            if selectedX >= tensorWidth:selectedX = 0 
+            if changed1 or changed2 :
+                glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(selectedX+1))
+                glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(selectedY+1))
+            # for i in range(tensorHeight):
+            #     for j in range(tensorWidth):
+            #         if i == click_row and j==click_col:
+            #             style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
+            #             style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
+            #         else:
+            #             style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
+            #             style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
+            #         if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
+            #             click_col = j
+            #             click_row = i
+            #             glUniform1f(uniform_location_locx, 1/(tensorWidth+1)*(j+1))
+            #             glUniform1f(uniform_location_locy, 1/(tensorHeight+1)*(i+1))
     imgui.set_next_window_position(width_window/8, 0)
     imgui.set_next_window_size(width_window-2*width_window/8, height_window)
     window_bg_color = imgui.get_style().colors[imgui.COLOR_WINDOW_BACKGROUND]
@@ -52,7 +61,7 @@ def imgui_render(tensorWidth,tensorHeight,uniform_location_locx,uniform_location
     flags = imgui.WINDOW_NO_TITLE_BAR | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE
     with imgui.begin("output",flags=flags):
         draw_list = imgui.get_window_draw_list()
-        if click_row != -1 and click_col != -1:
+        if selectedY != -1 and selectedX != -1:
             thicknes = 5
             if tensorHeight*tensorWidth<=100:
                 size = 40
@@ -284,7 +293,7 @@ def show_2d_tensor(tensor):
         (err,) = cu.cudaGraphicsUnmapResources(1, cuda_image, cu.cudaStreamLegacy)
 
         glBindVertexArray(vao)
-        if click_row != -1 and click_col != -1:
+        if selectedY != -1 and selectedX != -1:
             glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth+1)
         else:
             glDrawArrays(GL_POINTS, 0, tensorHeight*tensorWidth)
@@ -311,7 +320,7 @@ show_2d_tensor(tensor)
 
 ## example 2
 # rng= np.random.default_rng()
-# numpyArray= rng.integers(0,1,(100,100),endpoint= True).astype('bool')
+# numpyArray= rng.integers(0,1,(1000,1000),endpoint= True).astype('bool')
 # tensor = torch.tensor(numpyArray,
 #                       dtype=torch.bool,
 #                       device=torch.device('cuda:0'))
