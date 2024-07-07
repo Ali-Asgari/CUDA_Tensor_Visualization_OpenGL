@@ -283,7 +283,7 @@ def show_2d_tensor(tensor):
             array,
             0,
             0,
-            tensor.to(torch.uint8).data_ptr(),
+            tensor.data_ptr(),
             tensorWidth,
             tensorWidth,
             tensorHeight,
