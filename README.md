@@ -23,6 +23,9 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
     from Float_Advance.Visualize_Float_Tensor_GL_IMGUI import GUI
     GUI(tensor, update_tensor).renderOpenGL()
 
+> [!NOTE]
+> To demonstrate real-time functionality, the tensor will be updated using update_tensor, which will be called in every frame.
+
 <p align="center">
     <img src="./FloatEX1.png" alt="drawing" />
 </p>
