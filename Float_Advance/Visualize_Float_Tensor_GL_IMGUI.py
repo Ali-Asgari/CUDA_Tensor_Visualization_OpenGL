@@ -11,8 +11,9 @@ import math
 
 
 class GUI:
-    def __init__(self, tensor, width=1000, heigh=600):
+    def __init__(self, tensor, update_function = lambda x:x, width=1000, heigh=600):
         self.tensor = tensor
+        self.update_function = update_function
         self.elementSize = tensor.element_size()
         self.tensorHeight,self.tensorWidth = tensor.shape
         self.windowWidth = width
@@ -99,20 +100,6 @@ class GUI:
                 if self.selectedY >= self.tensorHeight:self.selectedY = 0 
                 if self.selectedX <= -1:self.selectedX = self.tensorWidth-1 
                 if self.selectedX >= self.tensorWidth:self.selectedX = 0 
-                # if self.tensorWidth*self.tensorHeight<=20000:
-                #     for i in range(self.tensorHeight):
-                #         for j in range(self.tensorWidth):
-                #             if i == self.selectedY and j==self.selectedX:
-                #                 style.colors[imgui.COLOR_BUTTON] = (0.03, 0.07, 0.22, 1.0)
-                #                 style.colors[imgui.COLOR_TEXT] = (1.0, 0.0, 0.0, 1.0)
-                #             else:
-                #                 style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
-                #                 style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
-                #             if (imgui.button("vertex_"+str(i)+"_"+str(j),100,25)):
-                #                 self.selectedX = j
-                #                 self.selectedY = i
-                # else:
-                #     imgui.text("Generate over \n 20000 button \n in python take \n alot of time\n and drop fps")
         style.colors[imgui.COLOR_BUTTON] = (0.13, 0.27, 0.42, 1.0)
         style.colors[imgui.COLOR_TEXT] = (1.0, 1.0, 1.0, 1.0)
         imgui.set_next_window_position(self.windowWidth/8, 0)
@@ -298,9 +285,12 @@ class GUI:
             glfw.poll_events()
             self.impl.process_inputs()
             imgui.new_frame()
-            # imgui_render(self.tensor,self.tensorWidth,self.tensorHeight,self.uniform_location_locx,self.uniform_location_locy)
             self.imguiUI()
             glClear(GL_COLOR_BUFFER_BIT)
+            
+            # Updating tensor 
+            self.tensor = self.update_function(self.tensor) 
+
             currentTime = time.time()
             timeDiff = currentTime - lastTime
             frameNumber += 1
@@ -347,20 +337,3 @@ class GUI:
         glDeleteBuffers(1, [self.vbo])
         self.impl.shutdown()
         glfw.terminate()
-
-numpyArray = np.array([[0.1, 0.2, 0.3 ],
-                       [0.4, 0.5, 0.6],
-                       [0.7, 0.8, 0.9],
-                       [1.0, 0.9, 0.8],])
-tensor = torch.tensor(numpyArray,
-                      dtype=torch.float16,
-                      device=torch.device('cuda:0'))
-GUI(tensor).renderOpenGL()
-
-
-## example 2
-# numpyArray=np.random.uniform(-0.5,1.5,(1000,1000))
-# tensor = torch.tensor(numpyArray,
-#                       dtype=torch.float32,
-#                       device=torch.device('cuda:0'))
-# GUI(tensor).renderOpenGL()
