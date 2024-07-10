@@ -2,7 +2,9 @@
 
 Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the need to transfer data to the CPU. The visualization is real-time, meaning that any changes to the tensor within the render loop will be immediately represented.
 
-## Example for float values
+## Usage and example
+
+### Float Values
     import torch
 
     def update_tensor(tensor):
@@ -20,12 +22,12 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
 
     from Float_Advance.Visualize_Float_Tensor_GL_IMGUI import GUI
     GUI(tensor, update_tensor).renderOpenGL()
-    
+
 <p align="center">
     <img src="./FloatEX1.png" alt="drawing" />
 </p>
 
-## Example for boolean values
+### Boolean Values
     numpyArray = np.array([[True, False, True ],
                         [False, True, True],])
     tensor = torch.tensor(numpyArray,
@@ -35,6 +37,8 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
 <p align="center">
     <img src="./BoolEX1.png" alt="drawing" />
 </p>
+
+<hr>
 
 ## Features
 - **Efficient GPU Rendering:** Avoids data transfer to the CPU, maximizing performance. 
@@ -56,13 +60,3 @@ Visualization of a PyTorch 2D tensor on Cuda device using OpenGL, without the ne
 
 ### Install PyTorch with CUDA 11.8
     pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-
-## Usage
-
-### Float Values
-    python Float(Advance)/Visualize_Float_Tensor_GL_IMGUI.py
-
-<hr>
-
-### Boolean Values and Basic Functionality
-    python Boolean(Basic)/Visualize_Boolean_Tensor_GL_IMGUI.py
